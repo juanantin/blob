@@ -1,21 +1,20 @@
 /* =========================================================
-   Site config — fill these in at launch
+   Site config
    ========================================================= */
 const CONFIG = {
-  // $BLOB contract address on Elysium. Leave "" until deployed.
+  // $BLOB contract address on Elysium.
   ca: "0x8589e6C3f5De71243aa5eDD23f994dd8a02b45C4",
 
-  // Agent K's wallet. Every KNTQ transfer into this address is counted.
-  agentK: "",
-
-  // Optional: only count transfers coming FROM this address
-  // (e.g. the fee distributor). Leave "" to count every transfer in.
-  feeFrom: "",
-
-  // Token the fees are paid in. $BLOB trades against native HYPE; tracking TBD.
-  feeToken: "0xe45a355d9e9cAd2aD85F2d03E3eE3102A036acF0",
+  // How fees reach Agent K (all on Elysium, paid in native HYPE):
+  // every $BLOB swap, sent.money's fee vault credits the creator share of the
+  // fee to $BLOB's locker, which holds it for @agentkinetiq to claim. On
+  // collection the locker keeps `handleShare` for the handle (rest = protocol).
+  pool: "0xffddcc916a3639ab7df5731d28110582148ac0e098637b5f0386ab7f38877e55",
+  feeVault: "0x3d36beb546e451584736957f97e7ee9d2acbd9a5",
+  locker: "0xe79de6dd9a16a911f45acd8edb07232929e59f22",
+  handleShare: 0.8,
+  fromBlock: "0x7384d5", // $BLOB launch block
   feeSymbol: "HYPE",
-  feeDecimals: 18,
 
   rpc: "https://rpc.volta.family",
   dexscreener: "https://api.dexscreener.com/latest/dex/tokens/",
@@ -25,9 +24,7 @@ const CONFIG = {
 (function () {
   const $ = (id) => document.getElementById(id);
   const isAddr = (a) => /^0x[0-9a-fA-F]{40}$/.test(a || "");
-  const topic = (a) => "0x" + "0".repeat(24) + a.slice(2).toLowerCase();
-  const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-  const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+  const fmt = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 });
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -55,11 +52,10 @@ const CONFIG = {
 
   /* ---------- Sent to Agent K ---------- */
   $("agent-unit").textContent = CONFIG.feeSymbol;
-  if (!isAddr(CONFIG.agentK)) return;
-
   const valueEl = $("agent-value");
   const usdEl = $("agent-usd");
   let shown = 0;
+  const ACCRUED = "0xc95ddcad"; // fee vault: fee credited (poolId, recipient, ..., amount)
 
   async function loadSent() {
     const res = await fetch(CONFIG.rpc, {
@@ -67,28 +63,29 @@ const CONFIG = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0", id: 1, method: "eth_getLogs",
-        params: [{
-          address: CONFIG.feeToken, fromBlock: "0x0", toBlock: "latest",
-          topics: [TRANSFER, isAddr(CONFIG.feeFrom) ? topic(CONFIG.feeFrom) : null, topic(CONFIG.agentK)],
-        }],
+        params: [{ address: CONFIG.feeVault, fromBlock: CONFIG.fromBlock, toBlock: "latest", topics: [null, CONFIG.pool] }],
       }),
     });
     const out = await res.json();
     if (out.error) throw new Error(out.error.message);
+    const locker = CONFIG.locker.slice(2).toLowerCase();
     let total = 0n;
-    for (const log of out.result) total += BigInt(log.data);
-    const scale = 10n ** BigInt(Math.max(0, CONFIG.feeDecimals - 6));
-    return Number(total / scale) / 1e6;
+    for (const log of out.result) {
+      if (!log.topics[0].startsWith(ACCRUED)) continue;
+      const d = log.data.slice(2);
+      if (d.slice(24, 64).toLowerCase() !== locker) continue;
+      total += BigInt("0x" + d.slice(128, 192));
+    }
+    return (Number(total / 10n ** 12n) / 1e6) * CONFIG.handleShare;
   }
 
+  // HYPE/USD derived from the $BLOB pair (priceUsd / priceNative).
   async function loadPrice() {
-    const res = await fetch(CONFIG.dexscreener + CONFIG.feeToken);
-    const pairs = ((await res.json()).pairs || []).filter(
-      (p) => p.baseToken.address.toLowerCase() === CONFIG.feeToken.toLowerCase() && p.priceUsd
-    );
+    const res = await fetch(CONFIG.dexscreener + CONFIG.ca);
+    const pairs = ((await res.json()).pairs || []).filter((p) => Number(p.priceNative) > 0 && p.priceUsd);
     if (!pairs.length) return null;
     const best = pairs.reduce((a, b) => ((b.liquidity?.usd || 0) > (a.liquidity?.usd || 0) ? b : a));
-    return Number(best.priceUsd);
+    return Number(best.priceUsd) / Number(best.priceNative);
   }
 
   function animate(target) {
