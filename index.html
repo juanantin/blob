@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>$BLOB</title>
+  <meta name="description" content="$BLOB on Elysium. Token fees, sent to Agent K." />
+  <meta name="theme-color" content="#06111a" />
+  <meta property="og:title" content="$BLOB" />
+  <meta property="og:description" content="$BLOB on Elysium. Token fees, sent to Agent K." />
+  <meta property="og:image" content="assets/poster.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@Blob_elykntq" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <video class="bg" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="assets/poster.jpg"
+         disablepictureinpicture disableremoteplayback tabindex="-1" aria-hidden="true">
+    <source src="assets/bg.webm" type="video/webm" />
+    <source src="assets/bg.mp4" type="video/mp4" />
+  </video>
+  <div class="shade" aria-hidden="true"></div>
+
+  <a class="x" href="https://x.com/Blob_elykntq" target="_blank" rel="noopener" aria-label="$BLOB on X">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg>
+  </a>
+
+  <main class="panel">
+    <h1 class="name">$BLOB</h1>
+
+    <div class="agent">
+      <span class="agent-label">Sent to Agent K</span>
+      <span class="agent-value"><span id="agent-value">—</span> <span class="agent-unit" id="agent-unit">KNTQ</span></span>
+      <span class="agent-usd" id="agent-usd">live at launch</span>
+    </div>
+
+    <div class="ca">
+      <span class="ca-label">CA</span>
+      <code class="ca-value" id="ca-value">Coming soon</code>
+      <button class="ca-copy" id="ca-copy" type="button" disabled>Copy</button>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
