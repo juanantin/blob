@@ -137,3 +137,25 @@ body {
 .story a:hover { color: var(--teal); }
 .nb { white-space: nowrap; }
 @media (max-width: 520px) { .nb { display: block; } }
+
+.launched {
+  position: fixed;
+  top: max(20px, env(safe-area-inset-top));
+  left: max(20px, env(safe-area-inset-left));
+  height: 46px;
+  display: inline-flex; align-items: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 14px; font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: color .2s, background .2s;
+  z-index: 2;
+}
+.launched strong { color: var(--teal); font-weight: 600; margin-left: .3em; }
+.launched:hover { color: var(--ink); background: rgba(6, 17, 26, 0.75); }
+.launched:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
