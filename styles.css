@@ -24,7 +24,7 @@ body {
 .shade {
   position: fixed; inset: 0;
   background:
-    linear-gradient(to top, rgba(6, 17, 26, 0.85) 0%, rgba(6, 17, 26, 0.25) 45%, rgba(6, 17, 26, 0) 70%),
+    linear-gradient(to top, rgba(6, 17, 26, 0.9) 0%, rgba(6, 17, 26, 0.45) 50%, rgba(6, 17, 26, 0) 70%),
     linear-gradient(to bottom, rgba(6, 17, 26, 0.45), rgba(6, 17, 26, 0) 20%);
   pointer-events: none;
 }
@@ -119,3 +119,21 @@ body {
 .ca-copy:active:not(:disabled) { transform: scale(.96); }
 .ca-copy:disabled { opacity: .45; cursor: default; }
 .ca-copy:focus-visible, .x:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+.tag {
+  margin-top: -6px;
+  font-size: clamp(17px, 3.6vw, 21px); font-weight: 600;
+  color: var(--teal);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .6);
+}
+.story {
+  max-width: 440px;
+  text-align: center;
+  font-size: 15px; font-weight: 500; line-height: 1.45;
+  color: var(--muted);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .7);
+}
+.story a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--teal); text-underline-offset: 3px; }
+.story a:hover { color: var(--teal); }
+.nb { white-space: nowrap; }
+@media (max-width: 520px) { .nb { display: block; } }
