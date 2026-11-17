@@ -3,7 +3,7 @@
    ========================================================= */
 const CONFIG = {
   // $BLOB contract address on Elysium. Leave "" until deployed.
-  ca: "",
+  ca: "0x8589e6C3f5De71243aa5eDD23f994dd8a02b45C4",
 
   // Agent K's wallet. Every KNTQ transfer into this address is counted.
   agentK: "",
@@ -12,9 +12,9 @@ const CONFIG = {
   // (e.g. the fee distributor). Leave "" to count every transfer in.
   feeFrom: "",
 
-  // Token the fees are paid in (KNTQ on Elysium, 18 decimals).
+  // Token the fees are paid in. $BLOB trades against native HYPE; tracking TBD.
   feeToken: "0xe45a355d9e9cAd2aD85F2d03E3eE3102A036acF0",
-  feeSymbol: "KNTQ",
+  feeSymbol: "HYPE",
   feeDecimals: 18,
 
   rpc: "https://rpc.volta.family",
