@@ -16,4 +16,4 @@ top of `script.js`.
 
 ## Other
 - Background video: `assets/bg.webm` + `assets/bg.mp4` (poster `assets/poster.jpg`).
-- X: https://x.com/Blob_elykntq
+- X: https://x.com/blob4agentk
