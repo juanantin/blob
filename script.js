@@ -3,18 +3,19 @@
    ========================================================= */
 const CONFIG = {
   // $BLOB contract address on Elysium.
-  ca: "0x8589e6C3f5De71243aa5eDD23f994dd8a02b45C4",
+  ca: "0x5d265ef15f6cca8ebb89ac09ac1399007592fb04",
 
-  // How fees reach Agent K (all on Elysium, paid in native HYPE):
+  // How fees reach Agent K (all on Elysium, paid in SENT):
   // every $BLOB swap, sent.money's fee vault credits the creator share of the
   // fee to $BLOB's locker, which holds it for @agentkinetiq to claim. On
   // collection the locker keeps `handleShare` for the handle (rest = protocol).
-  pool: "0xffddcc916a3639ab7df5731d28110582148ac0e098637b5f0386ab7f38877e55",
+  pool: "0x9abf76ef0dad012bd7e7e0f39cae9ce8303993d91b0c501d7f9577e97a60c476",
   feeVault: "0x3d36beb546e451584736957f97e7ee9d2acbd9a5",
   locker: "0xe79de6dd9a16a911f45acd8edb07232929e59f22",
   handleShare: 0.8,
-  fromBlock: "0x7384d5", // $BLOB launch block
-  feeSymbol: "HYPE",
+  fromBlock: "0x93b292", // $BLOB launch block
+  feeToken: "0xa713a15b85cab304f9e2fbc649440b5e3ab8a8d4",
+  feeSymbol: "SENT",
 
   rpc: "https://rpc.volta.family",
   dexscreener: "https://api.dexscreener.com/latest/dex/tokens/",
@@ -69,23 +70,32 @@ const CONFIG = {
     const out = await res.json();
     if (out.error) throw new Error(out.error.message);
     const locker = CONFIG.locker.slice(2).toLowerCase();
+    const feeToken = CONFIG.feeToken.slice(2).toLowerCase();
     let total = 0n;
     for (const log of out.result) {
       if (!log.topics[0].startsWith(ACCRUED)) continue;
       const d = log.data.slice(2);
       if (d.slice(24, 64).toLowerCase() !== locker) continue;
+      if (d.slice(88, 128).toLowerCase() !== feeToken) continue;
       total += BigInt("0x" + d.slice(128, 192));
     }
     return (Number(total / 10n ** 12n) / 1e6) * CONFIG.handleShare;
   }
 
-  // HYPE/USD derived from the $BLOB pair (priceUsd / priceNative).
+  // SENT/USD from its most liquid DexScreener pair (as base, or via the quote side).
   async function loadPrice() {
-    const res = await fetch(CONFIG.dexscreener + CONFIG.ca);
-    const pairs = ((await res.json()).pairs || []).filter((p) => Number(p.priceNative) > 0 && p.priceUsd);
-    if (!pairs.length) return null;
-    const best = pairs.reduce((a, b) => ((b.liquidity?.usd || 0) > (a.liquidity?.usd || 0) ? b : a));
-    return Number(best.priceUsd) / Number(best.priceNative);
+    const res = await fetch(CONFIG.dexscreener + CONFIG.feeToken);
+    const t = CONFIG.feeToken.toLowerCase();
+    let best = null;
+    for (const p of (await res.json()).pairs || []) {
+      if (!p.priceUsd || !(Number(p.priceNative) > 0)) continue;
+      const price = p.baseToken.address.toLowerCase() === t
+        ? Number(p.priceUsd)
+        : Number(p.priceUsd) / Number(p.priceNative);
+      const liq = p.liquidity?.usd || 0;
+      if (!best || liq > best.liq) best = { price, liq };
+    }
+    return best ? best.price : null;
   }
 
   function animate(target) {
