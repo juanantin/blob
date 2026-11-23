@@ -5,17 +5,26 @@ const CONFIG = {
   // $BLOB contract address on Elysium.
   ca: "0x68B867F6De166449B57A482109B43e0cF562b090",
 
-  // How fees reach Agent K (all on Elysium, paid in KNTQ):
+  // How fees reach Agent K (all on Elysium):
   // every $BLOB swap, sent.money's fee vault credits the creator share of the
-  // fee to $BLOB's locker, which holds it for @agentkinetiq to claim. On
-  // collection the locker keeps `handleShare` for the handle (rest = protocol).
-  pool: "0x4ff3c54277ce02707945f0f93373e588ade76803735557f3f9d626ee262308b3",
+  // fee to the locker, which holds it for @agentkinetiq to claim. On collection
+  // the locker keeps `handleShare` for the handle (rest = protocol).
+  // Every $BLOB launch counts toward the total, each paid in its pair token.
   feeVault: "0x3d36beb546e451584736957f97e7ee9d2acbd9a5",
   locker: "0xe79de6dd9a16a911f45acd8edb07232929e59f22",
   handleShare: 0.8,
-  fromBlock: "0x980f2a", // $BLOB launch block
-  feeToken: "0xe45a355d9e9cad2ad85f2d03e3ee3102a036acf0",
-  feeSymbol: "KNTQ",
+  fromBlock: "0x7384d5", // first $BLOB launch
+  launches: [
+    { pool: "0xffddcc916a3639ab7df5731d28110582148ac0e098637b5f0386ab7f38877e55", token: "0x0000000000000000000000000000000000000000" }, // HYPE
+    { pool: "0x9abf76ef0dad012bd7e7e0f39cae9ce8303993d91b0c501d7f9577e97a60c476", token: "0xa713a15b85cab304f9e2fbc649440b5e3ab8a8d4" }, // SENT
+    { pool: "0x4ff3c54277ce02707945f0f93373e588ade76803735557f3f9d626ee262308b3", token: "0xe45a355d9e9cad2ad85f2d03e3ee3102a036acf0" }, // KNTQ
+  ],
+  // Fee tokens: symbol + where to price them (native HYPE is priced via WHYPE).
+  tokens: {
+    "0x0000000000000000000000000000000000000000": { symbol: "HYPE", priceVia: "0xba876237b0f021a6c6d852d6c26e107997cc5e81" },
+    "0xa713a15b85cab304f9e2fbc649440b5e3ab8a8d4": { symbol: "SENT" },
+    "0xe45a355d9e9cad2ad85f2d03e3ee3102a036acf0": { symbol: "KNTQ" },
+  },
 
   rpc: "https://rpc.volta.family",
   dexscreener: "https://api.dexscreener.com/latest/dex/tokens/",
@@ -25,8 +34,6 @@ const CONFIG = {
 (function () {
   const $ = (id) => document.getElementById(id);
   const isAddr = (a) => /^0x[0-9a-fA-F]{40}$/.test(a || "");
-  const fmt = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 });
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- Contract address + copy ---------- */
@@ -52,40 +59,47 @@ const CONFIG = {
   });
 
   /* ---------- Sent to Agent K ---------- */
-  $("agent-unit").textContent = CONFIG.feeSymbol;
   const valueEl = $("agent-value");
   const usdEl = $("agent-usd");
+  const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
+  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
   let shown = 0;
-  const ACCRUED = "0xc95ddcad"; // fee vault: fee credited (poolId, recipient, ..., amount)
+  const ACCRUED = "0xc95ddcad"; // fee vault: fee credited (poolId, recipient, currency, amount)
 
+  // Agent K's share per fee token, summed over every $BLOB launch.
   async function loadSent() {
     const res = await fetch(CONFIG.rpc, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0", id: 1, method: "eth_getLogs",
-        params: [{ address: CONFIG.feeVault, fromBlock: CONFIG.fromBlock, toBlock: "latest", topics: [null, CONFIG.pool] }],
+        params: [{
+          address: CONFIG.feeVault, fromBlock: CONFIG.fromBlock, toBlock: "latest",
+          topics: [null, CONFIG.launches.map((l) => l.pool)],
+        }],
       }),
     });
     const out = await res.json();
     if (out.error) throw new Error(out.error.message);
     const locker = CONFIG.locker.slice(2).toLowerCase();
-    const feeToken = CONFIG.feeToken.slice(2).toLowerCase();
-    let total = 0n;
+    const wanted = new Map(CONFIG.launches.map((l) => [l.pool.toLowerCase(), l.token.slice(2).toLowerCase()]));
+    const totals = {};
     for (const log of out.result) {
       if (!log.topics[0].startsWith(ACCRUED)) continue;
       const d = log.data.slice(2);
-      if (d.slice(24, 64).toLowerCase() !== locker) continue;
-      if (d.slice(88, 128).toLowerCase() !== feeToken) continue;
-      total += BigInt("0x" + d.slice(128, 192));
+      const token = d.slice(88, 128).toLowerCase();
+      if (d.slice(24, 64).toLowerCase() !== locker || wanted.get(log.topics[1].toLowerCase()) !== token) continue;
+      totals["0x" + token] = (totals["0x" + token] || 0n) + BigInt("0x" + d.slice(128, 192));
     }
-    return (Number(total / 10n ** 12n) / 1e6) * CONFIG.handleShare;
+    const amounts = {};
+    for (const [t, wei] of Object.entries(totals)) amounts[t] = (Number(wei / 10n ** 12n) / 1e6) * CONFIG.handleShare;
+    return amounts;
   }
 
-  // KNTQ/USD from its most liquid DexScreener pair (as base, or via the quote side).
-  async function loadPrice() {
-    const res = await fetch(CONFIG.dexscreener + CONFIG.feeToken);
-    const t = CONFIG.feeToken.toLowerCase();
+  // USD price from the token's most liquid DexScreener pair (as base, or via the quote side).
+  async function loadPrice(address) {
+    const res = await fetch(CONFIG.dexscreener + address);
+    const t = address.toLowerCase();
     let best = null;
     for (const p of (await res.json()).pairs || []) {
       if (!p.priceUsd || !(Number(p.priceNative) > 0)) continue;
@@ -101,25 +115,32 @@ const CONFIG = {
   function animate(target) {
     const from = shown;
     shown = target;
-    if (reduce || from === target) { valueEl.textContent = fmt.format(target); return; }
+    if (reduce || from === target) { valueEl.textContent = money.format(target); return; }
     const t0 = performance.now();
     const dur = from === 0 ? 1600 : 900;
     const step = (now) => {
       const t = Math.min(1, (now - t0) / dur);
-      valueEl.textContent = fmt.format(from + (target - from) * (1 - Math.pow(1 - t, 4)));
+      valueEl.textContent = money.format(from + (target - from) * (1 - Math.pow(1 - t, 4)));
       if (t < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }
 
+  const prices = {};
   async function refresh() {
-    const [sent, price] = await Promise.allSettled([loadSent(), loadPrice()]);
-    if (sent.status === "fulfilled") {
-      animate(sent.value);
-      usdEl.textContent = price.status === "fulfilled" && price.value
-        ? "≈ " + usd.format(sent.value * price.value)
-        : "";
-    }
+    let amounts;
+    try { amounts = await loadSent(); } catch { return; }
+    const tokens = Object.keys(CONFIG.tokens);
+    await Promise.all(tokens.map(async (t) => {
+      try { const p = await loadPrice(CONFIG.tokens[t].priceVia || t); if (p) prices[t] = p; } catch {}
+    }));
+    let total = 0;
+    for (const t of tokens) total += (amounts[t] || 0) * (prices[t] || 0);
+    animate(total);
+    usdEl.textContent = tokens
+      .filter((t) => amounts[t])
+      .map((t) => compact.format(amounts[t]) + " " + CONFIG.tokens[t].symbol)
+      .join(" · ");
   }
 
   refresh();

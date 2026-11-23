@@ -7,12 +7,12 @@ python3 -m http.server 8000
 ```
 
 ## Sent to Agent K
-Fees are paid in KNTQ. On every $BLOB swap, sent.money's fee vault
-(`0x3d36…d9a5`) credits the creator share to $BLOB's locker (`0xe79d…9f22`), which
-holds it for @agentkinetiq to claim. The page sums those credits straight from the
-Elysium RPC, applies the locker's 80% handle share, and converts to USD using the
-KNTQ price on DexScreener. Refreshes every 30s. All of it is in `CONFIG` at the
-top of `script.js`.
+The total covers every $BLOB launch (fees paid in HYPE, SENT and KNTQ). On every
+swap, sent.money's fee vault (`0x3d36…d9a5`) credits the creator share to the locker
+(`0xe79d…9f22`), which holds it for @agentkinetiq to claim. The page sums those credits
+per launch straight from the Elysium RPC, applies the locker's 80% handle share, and
+prices each token with DexScreener. Refreshes every 30s. Add a new launch to
+`CONFIG.launches` (and its token to `CONFIG.tokens`) in `script.js`.
 
 ## Other
 - Background video: `assets/bg.webm` + `assets/bg.mp4` (poster `assets/poster.jpg`).

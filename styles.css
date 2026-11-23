@@ -84,7 +84,6 @@ body {
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
 }
-.agent-unit { font-size: .5em; color: var(--muted); font-weight: 500; }
 .agent-usd { font-size: 14px; color: var(--muted); font-weight: 500; }
 
 .ca {
