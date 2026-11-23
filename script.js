@@ -3,19 +3,19 @@
    ========================================================= */
 const CONFIG = {
   // $BLOB contract address on Elysium.
-  ca: "0x5d265ef15f6cca8ebb89ac09ac1399007592fb04",
+  ca: "0x68B867F6De166449B57A482109B43e0cF562b090",
 
-  // How fees reach Agent K (all on Elysium, paid in SENT):
+  // How fees reach Agent K (all on Elysium, paid in KNTQ):
   // every $BLOB swap, sent.money's fee vault credits the creator share of the
   // fee to $BLOB's locker, which holds it for @agentkinetiq to claim. On
   // collection the locker keeps `handleShare` for the handle (rest = protocol).
-  pool: "0x9abf76ef0dad012bd7e7e0f39cae9ce8303993d91b0c501d7f9577e97a60c476",
+  pool: "0x4ff3c54277ce02707945f0f93373e588ade76803735557f3f9d626ee262308b3",
   feeVault: "0x3d36beb546e451584736957f97e7ee9d2acbd9a5",
   locker: "0xe79de6dd9a16a911f45acd8edb07232929e59f22",
   handleShare: 0.8,
-  fromBlock: "0x93b292", // $BLOB launch block
-  feeToken: "0xa713a15b85cab304f9e2fbc649440b5e3ab8a8d4",
-  feeSymbol: "SENT",
+  fromBlock: "0x980f2a", // $BLOB launch block
+  feeToken: "0xe45a355d9e9cad2ad85f2d03e3ee3102a036acf0",
+  feeSymbol: "KNTQ",
 
   rpc: "https://rpc.volta.family",
   dexscreener: "https://api.dexscreener.com/latest/dex/tokens/",
@@ -82,7 +82,7 @@ const CONFIG = {
     return (Number(total / 10n ** 12n) / 1e6) * CONFIG.handleShare;
   }
 
-  // SENT/USD from its most liquid DexScreener pair (as base, or via the quote side).
+  // KNTQ/USD from its most liquid DexScreener pair (as base, or via the quote side).
   async function loadPrice() {
     const res = await fetch(CONFIG.dexscreener + CONFIG.feeToken);
     const t = CONFIG.feeToken.toLowerCase();
