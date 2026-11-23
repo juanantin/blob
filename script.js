@@ -16,14 +16,13 @@ const CONFIG = {
   fromBlock: "0x7384d5", // first $BLOB launch
   launches: [
     { pool: "0xffddcc916a3639ab7df5731d28110582148ac0e098637b5f0386ab7f38877e55", token: "0x0000000000000000000000000000000000000000" }, // HYPE
-    { pool: "0x9abf76ef0dad012bd7e7e0f39cae9ce8303993d91b0c501d7f9577e97a60c476", token: "0xa713a15b85cab304f9e2fbc649440b5e3ab8a8d4" }, // SENT
     { pool: "0x4ff3c54277ce02707945f0f93373e588ade76803735557f3f9d626ee262308b3", token: "0xe45a355d9e9cad2ad85f2d03e3ee3102a036acf0" }, // KNTQ
   ],
   // Fee tokens: symbol + where to price them (native HYPE is priced via WHYPE).
+  // Shown in this order. (The SENT-paired launch is left out: its fees are negligible.)
   tokens: {
-    "0x0000000000000000000000000000000000000000": { symbol: "HYPE", priceVia: "0xba876237b0f021a6c6d852d6c26e107997cc5e81" },
-    "0xa713a15b85cab304f9e2fbc649440b5e3ab8a8d4": { symbol: "SENT" },
     "0xe45a355d9e9cad2ad85f2d03e3ee3102a036acf0": { symbol: "KNTQ" },
+    "0x0000000000000000000000000000000000000000": { symbol: "HYPE", priceVia: "0xba876237b0f021a6c6d852d6c26e107997cc5e81" },
   },
 
   rpc: "https://rpc.volta.family",

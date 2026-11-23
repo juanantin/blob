@@ -7,7 +7,7 @@ python3 -m http.server 8000
 ```
 
 ## Sent to Agent K
-The total covers every $BLOB launch (fees paid in HYPE, SENT and KNTQ). On every
+The total covers every $BLOB launch (fees paid in KNTQ and HYPE; the SENT-paired launch is left out). On every
 swap, sent.money's fee vault (`0x3d36…d9a5`) credits the creator share to the locker
 (`0xe79d…9f22`), which holds it for @agentkinetiq to claim. The page sums those credits
 per launch straight from the Elysium RPC, applies the locker's 80% handle share, and
